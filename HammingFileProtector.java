@@ -457,6 +457,12 @@ public class HammingFileProtector {
             int end   = Math.min(i + blockBytes, data.length);
             byte[] block = Arrays.copyOfRange(data, i, end);
 
+            if (block.length < blockBytes) {
+                byte[] padded = new byte[blockBytes];
+                System.arraycopy(block, 0, padded, 0, block.length);
+                block = padded;
+            }
+
             boolean[] code = new boolean[totalBits];
             int dataBitIndex = 0;
             // 1) Datos
