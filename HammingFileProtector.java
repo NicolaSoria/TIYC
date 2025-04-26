@@ -157,37 +157,42 @@ public class HammingFileProtector {
         }
     }
 
-    // Codificación Hamming para bloques de 8 bits (4 bits de datos + 4 bits de paridad)
-    public static byte[] hamming8Encode(byte[] data) {
+     // Codificación Hamming para bloques de 8 bits (4 bits de datos + 4 bits de paridad)
+     public static byte[] hamming8Encode(byte[] data) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte encoded;
 
         for (byte b : data) {
-            // Partir en dos núcleos de 4 bits
+            // Partir en dos partes de 4
             for (int i = 0; i < 2; i++) {
-                int nibble = (i == 0) ? ((b >> 4) & 0x0F) : (b & 0x0F);
+                byte nupla = (byte) ((i == 0) ? ((b >> 4) & 0x0F) : (b & 0x0F));
 
-                // Datos aislados
-                int d3 = (nibble >> 3) & 1;
-                int d5 = (nibble >> 2) & 1;
-                int d6 = (nibble >> 1) & 1;
-                int d7 = nibble & 1;
+                //Codificacion de bits
 
-                // Bits de control
-                int c1 = d3 ^ d5 ^ d7;
-                int c2 = d3 ^ d6 ^ d7;
-                int c4 = d5 ^ d6 ^ d7;
-                int c8 = c1 ^ c2 ^ c4 ^ d3 ^ d5 ^ d6 ^ d7; // paridad global
+                //Bit de control c1 pos 7
+                encoded = (byte) (((((nupla >> 3) & 1) ^ ((nupla >> 2) & 1) ^ ((nupla) & 1)) << 7) | 
+                
+                //bit de control c2 pos 6
+                ((((nupla >> 3) & 1) ^ ((nupla >> 1) & 1) ^ ((nupla) & 1)) << 6) | 
 
-                // Byte codificado limpio
-                int encoded =
-                        (c1 << 7) |
-                                (c2 << 6) |
-                                (d3 << 5) |          // ya está &1, no se desborda
-                                (c4 << 4) |
-                                (d5 << 3) |
-                                (d6 << 2) |
-                                (d7 << 1) |
-                                c8;
+                //Bit de dato d3, pos 5
+                (((nupla >> 3) & 1) << 5) | 
+
+                //Bit de control c4 pos 4
+                ((((nupla >> 2) & 1) ^ ((nupla >> 1) & 1) ^ ((nupla) & 1)) << 4) |
+
+                //Bit de dato d5 pos 3
+                (((nupla >> 2) & 1) << 3) |
+                
+                //Bit de dato d6 pos 2
+                (((nupla >> 1) & 1) << 2) |
+
+                //Bit de dato d7 pos 1
+                (((nupla) & 1) << 1) |
+                //Bit de paridad 8            c1                               c2                                                        c3
+                (((nupla >> 3) & 1) ^ ((nupla >> 2) & 1) ^ ((nupla) & 1)) ^ (((nupla >> 3) & 1) ^ ((nupla >> 1) & 1) ^ ((nupla) & 1)) ^ (((nupla >> 2) & 1) ^ ((nupla >> 1) & 1) ^ ((nupla) & 1)) ^ //Bits de control
+                ((nupla >> 3) & 1) ^ ((nupla >> 2) & 1) ^ ((nupla) & 1) ^ ((nupla) & 1)  // bits de datos
+                );
 
                 output.write(encoded);
             }
